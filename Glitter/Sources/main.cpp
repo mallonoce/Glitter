@@ -1,6 +1,6 @@
 // Local Headers
 #include "glitter.hpp"
-#include "Executioner.h"
+#include "ExecutionerLight.h"
 
 // Standard Headers
 #include <cstdio>
@@ -11,10 +11,9 @@
 #define WINBUILD
 #endif
 
-
 int main(/*int argc, char * argv[]*/) {
 
-    Executioner execut;
+    ExecutionerLight exec;
 
-    return execut.run(5);
+    return exec.run();
 }
