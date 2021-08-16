@@ -57,59 +57,58 @@ int ExecutionerLight::run() {
 
     // build and compile our shader zprogram
     // ------------------------------------
-    Shader lightCubeShader(utils::getPath("1.colors.vs", utils::fileType::SHADER).c_str(),
+    Shader CubeShader(utils::getPath("1.colors.vs", utils::fileType::SHADER).c_str(),
         utils::getPath("1.colors.fs", utils::fileType::SHADER).c_str());
-    Shader lightingShader(utils::getPath("1.light_cube.vs", utils::fileType::SHADER).c_str(),
+    Shader LightShader(utils::getPath("1.light_cube.vs", utils::fileType::SHADER).c_str(),
         utils::getPath("1.light_cube.fs", utils::fileType::SHADER).c_str());
 
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f, 
-         0.5f, -0.5f, -0.5f, 
-         0.5f,  0.5f, -0.5f, 
-         0.5f,  0.5f, -0.5f, 
-        -0.5f,  0.5f, -0.5f, 
-        -0.5f, -0.5f, -0.5f, 
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 
-        -0.5f, -0.5f,  0.5f, 
-         0.5f, -0.5f,  0.5f, 
-         0.5f,  0.5f,  0.5f, 
-         0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
 
-        -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f, -0.5f, 
-        -0.5f, -0.5f, -0.5f, 
-        -0.5f, -0.5f, -0.5f, 
-        -0.5f, -0.5f,  0.5f, 
-        -0.5f,  0.5f,  0.5f, 
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
 
-         0.5f,  0.5f,  0.5f, 
-         0.5f,  0.5f, -0.5f, 
-         0.5f, -0.5f, -0.5f, 
-         0.5f, -0.5f, -0.5f, 
-         0.5f, -0.5f,  0.5f, 
-         0.5f,  0.5f,  0.5f, 
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
 
-        -0.5f, -0.5f, -0.5f, 
-         0.5f, -0.5f, -0.5f, 
-         0.5f, -0.5f,  0.5f, 
-         0.5f, -0.5f,  0.5f, 
-        -0.5f, -0.5f,  0.5f, 
-        -0.5f, -0.5f, -0.5f, 
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
 
-        -0.5f,  0.5f, -0.5f,  
-         0.5f,  0.5f, -0.5f,  
-         0.5f,  0.5f,  0.5f,  
-         0.5f,  0.5f,  0.5f,  
-        -0.5f,  0.5f,  0.5f,  
-        -0.5f,  0.5f, -0.5f,  
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
     };
 
-    // first, configure the cube's VAO (and VBO)
     // first, configure the cube's VAO (and VBO)
     unsigned int VBO, cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
@@ -121,8 +120,11 @@ int ExecutionerLight::run() {
     glBindVertexArray(cubeVAO);
 
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    // normal attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
 
     // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
     unsigned int lightCubeVAO;
@@ -132,19 +134,19 @@ int ExecutionerLight::run() {
     // we only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need (it's already bound, but we do it again for educational purposes)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
 
-    lightCubeShader.use(); // don't forget to activate/use the shader before setting uniforms!
-    lightCubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-    lightCubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+    CubeShader.use(); // don't forget to activate/use the shader before setting uniforms!
+    CubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+    CubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
     // Init matrices as Identities
     glm::mat4 projection = glm::mat4(1.0f);
     projection = glm::perspective(45.0f, (float)mWidth / (float)mHeight, 0.1f, 100.0f);
-    lightCubeShader.setMat4("projection", projection);
-    lightingShader.setMat4("projection", projection);
+    CubeShader.setMat4("projection", projection);
+    LightShader.setMat4("projection", projection);
 
     //set light poosition 
     glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
@@ -187,42 +189,46 @@ int ExecutionerLight::run() {
         if (glfwManager.WasKeyPressed(GLFW_KEY_D))
             this->_camera.ProcessKeyboard(RIGHT, this->_deltaTime);
 
-
-       // render
-        // ------
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        // render
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        // be sure to activate shader when setting uniforms/drawing objects
-        lightCubeShader.use();
-        lightCubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-        lightCubeShader.setVec3("lightColor",  1.0f, 1.0f, 1.0f);
-
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(_camera.Zoom), (float)mWidth / (float)mHeight, 0.1f, 100.0f);
         glm::mat4 view = _camera.GetViewMatrix();
-        lightCubeShader.setMat4("projection", projection);
-        lightCubeShader.setMat4("view", view);
+
+        // also draw the lamp object
+        LightShader.use();
+        LightShader.setMat4("projection", projection);
+        LightShader.setMat4("view", view);
+        glm::mat4  model = glm::mat4(1.0f);
+        float angle = glfwGetTime() * 25.0f;
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        LightShader.setMat4("model", model);
+        glm::vec3 newLightPos = glm::vec3(model[3]);
+        // update light position 
+
+        glBindVertexArray(lightCubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        // be sure to activate shader when setting uniforms/drawing objects
+        CubeShader.use();
+        CubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        CubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+        //CubeShader.setVec3("lightPos", lightPos);
+        CubeShader.setVec3("lightPos", newLightPos);
+
+        CubeShader.setMat4("projection", projection);
+        CubeShader.setMat4("view", view);
 
         // world transformation
-        glm::mat4 model = glm::mat4(1.0f);
-        lightCubeShader.setMat4("model", model);
+        model = glm::mat4(1.0f);
+        CubeShader.setMat4("model", model);
 
         // render the cube
         glBindVertexArray(cubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-
-        // also draw the lamp object
-        lightingShader.use();
-        lightingShader.setMat4("projection", projection);
-        lightingShader.setMat4("view", view);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-        lightingShader.setMat4("model", model);
-
-        glBindVertexArray(lightCubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // glfw: swap buffers and poll IO events
