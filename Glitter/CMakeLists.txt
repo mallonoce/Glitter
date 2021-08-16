@@ -41,20 +41,21 @@ source_group("Shaders" FILES ${PROJECT_SHADERS})
 source_group("Sources" FILES ${PROJECT_SOURCES})
 source_group("Vendors" FILES ${VENDORS_SOURCES})
 
-set(PROJECT_SOURCE_DIR ${PROJECT_SOURCE_DIR}/Glitter)
-add_definitions(-DGLFW_INCLUDE_NONE
-                -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\")
-add_library(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS}
-                               ${PROJECT_SHADERS} ${PROJECT_CONFIGS}
-                               ${VENDORS_SOURCES})
+add_definitions(-DGLFW_INCLUDE_NONE -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\")
+
+add_library(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_SHADERS} ${PROJECT_CONFIGS} ${VENDORS_SOURCES})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} assimp glfw ${GLFW_LIBRARIES} ${GLAD_LIBRARIES} BulletDynamics BulletCollision LinearMath)
 
-target_link_libraries(${PROJECT_NAME} assimp glfw
-                      ${GLFW_LIBRARIES} ${GLAD_LIBRARIES}
-                      BulletDynamics BulletCollision LinearMath)
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
+
+install(TARGETS ${PROJECT_NAME} DESTINATION lib)
+if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
+   install(TARGETS ${PROJECT_NAME}d DESTINATION lib)
+endif()
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/" DESTINATION include)
 
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD

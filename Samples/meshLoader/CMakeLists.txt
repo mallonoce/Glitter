@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-set(PROJECT_NAME sample_test)
+set(PROJECT_NAME meshLoader)
 project(${PROJECT_NAME})
 
 file(GLOB PROJECT_HEADERS *.hpp
