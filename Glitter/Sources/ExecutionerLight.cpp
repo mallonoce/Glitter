@@ -219,7 +219,8 @@ int ExecutionerLight::run() {
         CubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
         //CubeShader.setVec3("lightPos", lightPos);
         CubeShader.setVec3("lightPos", newLightPos);
-
+        CubeShader.setVec3("viewPos", this->_camera.Position);
+        
         CubeShader.setMat4("projection", projection);
         CubeShader.setMat4("view", view);
 
