@@ -4,6 +4,7 @@
 #include "GLFWManager.h"
 #include "utils.h"
 #include "camera.h"
+#include "Material.h"
 
 // System Headers
 #include <glad/glad.h>
@@ -58,7 +59,7 @@ int ExecutionerLight::run() {
     // build and compile our shader zprogram
     // ------------------------------------
     Shader CubeShader(utils::getPath("1.colors.vs", utils::fileType::SHADER).c_str(),
-        utils::getPath("1.colors.fs", utils::fileType::SHADER).c_str());
+        utils::getPath("materials.fs", utils::fileType::SHADER).c_str());
     Shader LightShader(utils::getPath("1.light_cube.vs", utils::fileType::SHADER).c_str(),
         utils::getPath("1.light_cube.fs", utils::fileType::SHADER).c_str());
 
@@ -137,10 +138,12 @@ int ExecutionerLight::run() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-
+    // Set material
+    std::vector<std::string> materials = { "emerald","jade","obsidian","pearl","ruby","turquoise","brass","bronze","chrome","copper","gold","silver","black plastic","black rubber" };
+    int currMat = 0;
     CubeShader.use(); // don't forget to activate/use the shader before setting uniforms!
-    CubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
     CubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+    
 
     // Init matrices as Identities
     glm::mat4 projection = glm::mat4(1.0f);
@@ -188,6 +191,12 @@ int ExecutionerLight::run() {
             this->_camera.ProcessKeyboard(LEFT, this->_deltaTime);
         if (glfwManager.WasKeyPressed(GLFW_KEY_D))
             this->_camera.ProcessKeyboard(RIGHT, this->_deltaTime);
+        if (glfwManager.WasKeyPressed(GLFW_KEY_N))
+        {
+            currMat++;
+            if (currMat == materials.size())
+                currMat = 0;
+        }
 
         // render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -215,12 +224,15 @@ int ExecutionerLight::run() {
 
         // be sure to activate shader when setting uniforms/drawing objects
         CubeShader.use();
-        CubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-        CubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+
+        Material mat = Material::GetMaterial(materials[currMat]);
+        CubeShader.setVec3("material.ambient", mat.ambient);
+        CubeShader.setVec3("material.diffuse", mat.diffuse);
+        CubeShader.setVec3("material.specular", mat.specular);
+        CubeShader.setFloat("material.shininess", mat.shininess);
+
         //CubeShader.setVec3("lightPos", lightPos);
         CubeShader.setVec3("lightPos", newLightPos);
-        CubeShader.setVec3("viewPos", this->_camera.Position);
-        
         CubeShader.setMat4("projection", projection);
         CubeShader.setMat4("view", view);
 
