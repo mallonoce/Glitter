@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "camera.h"
 #include "Material.h"
+#include "Light.h"
 
 // System Headers
 #include <glad/glad.h>
@@ -141,15 +142,19 @@ int ExecutionerLight::run() {
     // Set material
     std::vector<std::string> materials = { "emerald","jade","obsidian","pearl","ruby","turquoise","brass","bronze","chrome","copper","gold","silver","black plastic","black rubber" };
     int currMat = 0;
+    
+    // Set Light 
+    Light light;
+    light.ambient = glm::vec3(0.2f);
+    light.diffuse = glm::vec3(0.5f);
+    light.specular = glm::vec3(1.0f);
+
     CubeShader.use(); // don't forget to activate/use the shader before setting uniforms!
     CubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-    
 
     // Init matrices as Identities
     glm::mat4 projection = glm::mat4(1.0f);
     projection = glm::perspective(45.0f, (float)mWidth / (float)mHeight, 0.1f, 100.0f);
-    CubeShader.setMat4("projection", projection);
-    LightShader.setMat4("projection", projection);
 
     //set light poosition 
     glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
@@ -216,9 +221,8 @@ int ExecutionerLight::run() {
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
         LightShader.setMat4("model", model);
-        glm::vec3 newLightPos = glm::vec3(model[3]);
-        // update light position 
-
+        light.position = glm::vec3(model[3]); // update light position 
+        
         glBindVertexArray(lightCubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -231,8 +235,22 @@ int ExecutionerLight::run() {
         CubeShader.setVec3("material.specular", mat.specular);
         CubeShader.setFloat("material.shininess", mat.shininess);
 
-        //CubeShader.setVec3("lightPos", lightPos);
-        CubeShader.setVec3("lightPos", newLightPos);
+        // Change light color over time 
+        glm::vec3 lightColor;
+        lightColor.x = sin(glfwGetTime() * 2.0f);
+        lightColor.y = sin(glfwGetTime() * 0.7f);
+        lightColor.z = sin(glfwGetTime() * 1.3f);
+
+        glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+
+        //CubeShader.setVec3("light.ambient", light.ambient);
+        //CubeShader.setVec3("light.diffuse", light.diffuse);
+        CubeShader.setVec3("light.ambient", ambientColor);
+        CubeShader.setVec3("light.diffuse", diffuseColor);
+        CubeShader.setVec3("light.specular", light.specular);
+        CubeShader.setVec3("light.position", light.position);
+
         CubeShader.setMat4("projection", projection);
         CubeShader.setMat4("view", view);
 
