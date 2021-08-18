@@ -28,12 +28,7 @@
 
 static ExecutionerLight* exec;
 
-void framebuffer_size_callback_light(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
-}
+void framebuffer_size_callback_light(GLFWwindow* window, int width, int height);
 void mouse_callback_light(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback_light(GLFWwindow* window, double xoffset, double yoffset);
 
@@ -50,6 +45,8 @@ int ExecutionerLight::run() {
     this->_deltaTime = 0.0f;	// time between current frame and last frame
     this->_lastFrame = 0.0f;
 
+    // lighting
+    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
     GLFWManager glfwManager(mWidth, mHeight, "OpenGL");
 
@@ -57,58 +54,64 @@ int ExecutionerLight::run() {
     glfwSetCursorPosCallback(glfwManager.GetWindow(), mouse_callback_light);
     glfwSetScrollCallback(glfwManager.GetWindow(), scroll_callback_light);
 
+    // tell GLFW to capture our mouse
+    glfwSetInputMode(glfwManager.GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    // configure global opengl state
+    glEnable(GL_DEPTH_TEST);
+
     // build and compile our shader zprogram
     // ------------------------------------
-    Shader CubeShader(utils::getPath("1.colors.vs", utils::fileType::SHADER).c_str(),
-        utils::getPath("materials.fs", utils::fileType::SHADER).c_str());
-    Shader LightShader(utils::getPath("1.light_cube.vs", utils::fileType::SHADER).c_str(),
+    Shader lightingShader(utils::getPath("materials_diffuse_map.vs", utils::fileType::SHADER).c_str(),
+        utils::getPath("materials_diffuse_map.fs", utils::fileType::SHADER).c_str());
+    Shader lightCubeShader(utils::getPath("1.light_cube.vs", utils::fileType::SHADER).c_str(),
         utils::getPath("1.light_cube.fs", utils::fileType::SHADER).c_str());
 
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
     float vertices[] = {
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        // positions          // normals           // texture coords
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
 
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
 
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
 
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
 
-    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
 
-    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
     };
 
     // first, configure the cube's VAO (and VBO)
@@ -120,51 +123,47 @@ int ExecutionerLight::run() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glBindVertexArray(cubeVAO);
-
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    // normal attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
     unsigned int lightCubeVAO;
     glGenVertexArrays(1, &lightCubeVAO);
     glBindVertexArray(lightCubeVAO);
 
-    // we only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need (it's already bound, but we do it again for educational purposes)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    // note that we update the lamp's position attribute's stride to reflect the updated buffer data
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    // Set material
-    std::vector<std::string> materials = { "emerald","jade","obsidian","pearl","ruby","turquoise","brass","bronze","chrome","copper","gold","silver","black plastic","black rubber" };
-    int currMat = 0;
-    
+    // Load texture 
+    unsigned int diffuseMap = utils::loadTexture("container2.png");
+    unsigned int specularMap = utils::loadTexture("container2_specular.png");
+
+    // shader configuration
+    lightingShader.use(); 
+    lightingShader.setInt("material.diffuse", 0);
+    lightingShader.setInt("material.specular", 1);
+
     // Set Light 
     Light light;
     light.ambient = glm::vec3(0.2f);
     light.diffuse = glm::vec3(0.5f);
     light.specular = glm::vec3(1.0f);
 
-    CubeShader.use(); // don't forget to activate/use the shader before setting uniforms!
-    CubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-
     // Init matrices as Identities
     glm::mat4 projection = glm::mat4(1.0f);
     projection = glm::perspective(45.0f, (float)mWidth / (float)mHeight, 0.1f, 100.0f);
 
     //set light poosition 
-    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
     glm::vec3 posOff = glm::vec3(0.0f,0.0f,0.0f);
 
     double lastTime = glfwGetTime();
     int nbFrames = 0;
-
-    // Enable Z-buffer testing
-    glEnable(GL_DEPTH_TEST);
 
     // render loop
     while (!glfwManager.ShouldClose())
@@ -174,8 +173,8 @@ int ExecutionerLight::run() {
         nbFrames++;
         if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1 sec ago
             // printf and reset timer
-            //printf("%f ms/frame\n", 1000.0 / double(nbFrames));
-            //printf("%d fps\n", nbFrames);
+            printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+            printf("%d fps\n", nbFrames);
             nbFrames = 0;
             lastTime += 1.0;
         }
@@ -196,70 +195,60 @@ int ExecutionerLight::run() {
             this->_camera.ProcessKeyboard(LEFT, this->_deltaTime);
         if (glfwManager.WasKeyPressed(GLFW_KEY_D))
             this->_camera.ProcessKeyboard(RIGHT, this->_deltaTime);
-        if (glfwManager.WasKeyPressed(GLFW_KEY_N))
-        {
-            currMat++;
-            if (currMat == materials.size())
-                currMat = 0;
-        }
 
         // render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
+        // be sure to activate shader when setting uniforms/drawing objects
+        lightingShader.use();
+        lightingShader.setVec3("light.position", light.position);
+        lightingShader.setVec3("viewPos", this->_camera.Position);
+
+        // light properties
+        lightingShader.setVec3("light.ambient", light.ambient); 
+        lightingShader.setVec3("light.diffuse", light.diffuse);
+        lightingShader.setVec3("light.specular", light.specular);
+
+        // material properties
+        lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        lightingShader.setFloat("material.shininess", 64.0f);
+
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(_camera.Zoom), (float)mWidth / (float)mHeight, 0.1f, 100.0f);
-        glm::mat4 view = _camera.GetViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(this->_camera.Zoom), (float)mWidth / (float)mHeight, 0.1f, 100.0f);
+        glm::mat4 view = this->_camera.GetViewMatrix();
+        lightingShader.setMat4("projection", projection);
+        lightingShader.setMat4("view", view);
+
+        // world transformation
+        glm::mat4 model = glm::mat4(1.0f);
+        lightingShader.setMat4("model", model);
+
+        // bind diffuse map
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
+        // render the cube
+        glBindVertexArray(cubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // also draw the lamp object
-        LightShader.use();
-        LightShader.setMat4("projection", projection);
-        LightShader.setMat4("view", view);
-        glm::mat4  model = glm::mat4(1.0f);
+        lightCubeShader.use();
+        lightCubeShader.setMat4("projection", projection);
+        lightCubeShader.setMat4("view", view);
+        model = glm::mat4(1.0f);
+        
+        // rotate light
         float angle = glfwGetTime() * 25.0f;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-        LightShader.setMat4("model", model);
+        lightCubeShader.setMat4("model", model);
         light.position = glm::vec3(model[3]); // update light position 
         
         glBindVertexArray(lightCubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        // be sure to activate shader when setting uniforms/drawing objects
-        CubeShader.use();
-
-        Material mat = Material::GetMaterial(materials[currMat]);
-        CubeShader.setVec3("material.ambient", mat.ambient);
-        CubeShader.setVec3("material.diffuse", mat.diffuse);
-        CubeShader.setVec3("material.specular", mat.specular);
-        CubeShader.setFloat("material.shininess", mat.shininess);
-
-        // Change light color over time 
-        glm::vec3 lightColor;
-        lightColor.x = sin(glfwGetTime() * 2.0f);
-        lightColor.y = sin(glfwGetTime() * 0.7f);
-        lightColor.z = sin(glfwGetTime() * 1.3f);
-
-        glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
-        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
-
-        //CubeShader.setVec3("light.ambient", light.ambient);
-        //CubeShader.setVec3("light.diffuse", light.diffuse);
-        CubeShader.setVec3("light.ambient", ambientColor);
-        CubeShader.setVec3("light.diffuse", diffuseColor);
-        CubeShader.setVec3("light.specular", light.specular);
-        CubeShader.setVec3("light.position", light.position);
-
-        CubeShader.setMat4("projection", projection);
-        CubeShader.setMat4("view", view);
-
-        // world transformation
-        model = glm::mat4(1.0f);
-        CubeShader.setMat4("model", model);
-
-        // render the cube
-        glBindVertexArray(cubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // glfw: swap buffers and poll IO events
@@ -271,11 +260,19 @@ int ExecutionerLight::run() {
     glDeleteVertexArrays(1, &lightCubeVAO);
     glDeleteVertexArrays(1, &cubeVAO);
     glDeleteBuffers(1, &VBO);
-    //glDeleteBuffers(1, &EBO);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     glfwManager.TerminateAll();
     return EXIT_SUCCESS;
+}
+
+// glfw: whenever the window size changed (by OS or user resize) this callback function executes
+// ---------------------------------------------------------------------------------------------
+void framebuffer_size_callback_light(GLFWwindow* window, int width, int height)
+{
+    // make sure the viewport matches the new window dimensions; note that width and 
+    // height will be significantly larger than specified on retina displays.
+    glViewport(0, 0, width, height);
 }
 
 // glfw: whenever the mouse moves, this callback is called
