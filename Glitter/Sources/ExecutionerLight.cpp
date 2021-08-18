@@ -165,11 +165,12 @@ int ExecutionerLight::run() {
 
     // Set Light 
     Light light;
-    light.ambient = glm::vec3(0.2f);
+    light.ambient = glm::vec3(0.1f);
     light.diffuse = glm::vec3(0.5f);
     light.specular = glm::vec3(1.0f);
     light.position = glm::vec4(lightPos, 1.0f);
-
+    light.type = LightTypes::SPOTLIGHT;
+    light.cutOff = 12.5f;
 
     // Init matrices as Identities
     glm::mat4 projection = glm::mat4(1.0f);
@@ -222,7 +223,11 @@ int ExecutionerLight::run() {
 
         // be sure to activate shader when setting uniforms/drawing objects
         lightingShader.use();
-        lightingShader.setVec4("light.position", light.position);
+        lightingShader.setVec4("light.position", glm::vec4(this->_camera.Position, 1.0f));
+        lightingShader.setVec3("light.direction", this->_camera.Front);
+        lightingShader.setFloat("light.cutOff", glm::cos(glm::radians(light.cutOff)));
+        lightingShader.setFloat("light.outerCutOff", glm::cos(glm::radians(light.outerCutOff)));
+        lightingShader.setInt("light.type", (int)light.type);
         lightingShader.setVec3("viewPos", this->_camera.Position);
 
         // light properties
