@@ -46,7 +46,7 @@ int ExecutionerLight::run() {
     this->_lastFrame = 0.0f;
 
     // lighting
-    // glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
     glm::vec3 lightDir(-0.2f, -1.0f, -0.3f);
 
     GLFWManager glfwManager(mWidth, mHeight, "OpenGL");
@@ -168,7 +168,7 @@ int ExecutionerLight::run() {
     light.ambient = glm::vec3(0.2f);
     light.diffuse = glm::vec3(0.5f);
     light.specular = glm::vec3(1.0f);
-    light.position = glm::vec4(-0.2f, -1.0f, -0.3f, 0.0f); 	
+    light.position = glm::vec4(lightPos, 1.0f);
 
 
     // Init matrices as Identities
@@ -189,8 +189,8 @@ int ExecutionerLight::run() {
         nbFrames++;
         if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1 sec ago
             // printf and reset timer
-            // printf("%f ms/frame\n", 1000.0 / double(nbFrames));
-            // printf("%d fps\n", nbFrames);
+            //printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+            //printf("%d fps\n", nbFrames);
             nbFrames = 0;
             lastTime += 1.0;
         }
@@ -211,6 +211,10 @@ int ExecutionerLight::run() {
             this->_camera.ProcessKeyboard(LEFT, this->_deltaTime);
         if (glfwManager.WasKeyPressed(GLFW_KEY_D))
             this->_camera.ProcessKeyboard(RIGHT, this->_deltaTime);
+        if (glfwManager.WasKeyPressed(GLFW_KEY_SPACE))
+            this->_camera.ProcessKeyboard(UP, this->_deltaTime);
+        if (glfwManager.WasKeyPressed(GLFW_KEY_LEFT_SHIFT))
+            this->_camera.ProcessKeyboard(DOWN, this->_deltaTime);
 
         // render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -218,8 +222,6 @@ int ExecutionerLight::run() {
 
         // be sure to activate shader when setting uniforms/drawing objects
         lightingShader.use();
-        lightingShader.setInt("light.type", (int)light.GetType());
-
         lightingShader.setVec4("light.position", light.position);
         lightingShader.setVec3("viewPos", this->_camera.Position);
 
@@ -231,6 +233,10 @@ int ExecutionerLight::run() {
         // material properties
         lightingShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
         lightingShader.setFloat("material.shininess", 64.0f);
+
+        lightingShader.setFloat("light.constant", light.constant);
+        lightingShader.setFloat("light.linear", light.linear);
+        lightingShader.setFloat("light.quadratic", light.quadratic);
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(this->_camera.Zoom), (float)mWidth / (float)mHeight, 0.1f, 100.0f);
@@ -270,16 +276,15 @@ int ExecutionerLight::run() {
         model = glm::mat4(1.0f);
         
         // rotate light
-        // float angle = glfwGetTime() * 25.0f;
-        // model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
-        // model = glm::translate(model, lightPos);
-        // model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-        lightCubeShader.setMat4("model", glm::mat4(1.0f));
-        // light.position = glm::vec3(model[3]); // update light position 
-        // lightingShader.setVec4("light.position", light.position); 	
+        float angle = glfwGetTime() * 20.0f;
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        lightCubeShader.setMat4("model", model);
+        glm::vec3 newLightPos = model[3];
+        light.position = glm::vec4(newLightPos, 1.0f); // update light position 
+        lightingShader.setVec4("light.position", light.position); 	
         
-
-
         glBindVertexArray(lightCubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 

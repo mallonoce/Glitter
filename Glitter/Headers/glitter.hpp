@@ -25,4 +25,6 @@
 const int mWidth = 1280;
 const int mHeight = 800;
 
+const int targetFPS = 60;
+
 #endif //~ Glitter Header
