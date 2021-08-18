@@ -9,8 +9,8 @@ struct Material {
 }; 
 
 struct Light {
-    vec3 position;
-
+    vec4 position;
+    
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
@@ -28,7 +28,15 @@ void main()
 {
     // diffuse vector
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(light.position - FragPos);
+
+    vec3 lightDir;
+    if(light.position.w == 1.0f)
+        lightDir = normalize(light.position.xyz - FragPos); // point light
+    else // if(light.position.w == 0.0f)
+        lightDir = normalize(-light.position.xyz); // directional light, use position vector as direction
+
+
+
     float diff = max(dot(norm, lightDir), 0.0);
     
     // specular vector

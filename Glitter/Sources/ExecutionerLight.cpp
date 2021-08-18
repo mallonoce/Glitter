@@ -46,7 +46,8 @@ int ExecutionerLight::run() {
     this->_lastFrame = 0.0f;
 
     // lighting
-    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+    // glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+    glm::vec3 lightDir(-0.2f, -1.0f, -0.3f);
 
     GLFWManager glfwManager(mWidth, mHeight, "OpenGL");
 
@@ -55,7 +56,7 @@ int ExecutionerLight::run() {
     glfwSetScrollCallback(glfwManager.GetWindow(), scroll_callback_light);
 
     // tell GLFW to capture our mouse
-    glfwSetInputMode(glfwManager.GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    //glfwSetInputMode(glfwManager.GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // configure global opengl state
     glEnable(GL_DEPTH_TEST);
@@ -114,6 +115,19 @@ int ExecutionerLight::run() {
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
     };
 
+    glm::vec3 cubePositions[] = {
+        glm::vec3( 0.0f,  0.0f,  0.0f), 
+        glm::vec3( 2.0f,  5.0f, -15.0f), 
+        glm::vec3(-1.5f, -2.2f, -2.5f),  
+        glm::vec3(-3.8f, -2.0f, -12.3f),  
+        glm::vec3( 2.4f, -0.4f, -3.5f),  
+        glm::vec3(-1.7f,  3.0f, -7.5f),  
+        glm::vec3( 1.3f, -2.0f, -2.5f),  
+        glm::vec3( 1.5f,  2.0f, -2.5f), 
+        glm::vec3( 1.5f,  0.2f, -1.5f), 
+        glm::vec3(-1.3f,  1.0f, -1.5f)  
+    };
+
     // first, configure the cube's VAO (and VBO)
     unsigned int VBO, cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
@@ -154,6 +168,8 @@ int ExecutionerLight::run() {
     light.ambient = glm::vec3(0.2f);
     light.diffuse = glm::vec3(0.5f);
     light.specular = glm::vec3(1.0f);
+    light.position = glm::vec4(-0.2f, -1.0f, -0.3f, 0.0f); 	
+
 
     // Init matrices as Identities
     glm::mat4 projection = glm::mat4(1.0f);
@@ -173,8 +189,8 @@ int ExecutionerLight::run() {
         nbFrames++;
         if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1 sec ago
             // printf and reset timer
-            printf("%f ms/frame\n", 1000.0 / double(nbFrames));
-            printf("%d fps\n", nbFrames);
+            // printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+            // printf("%d fps\n", nbFrames);
             nbFrames = 0;
             lastTime += 1.0;
         }
@@ -202,7 +218,9 @@ int ExecutionerLight::run() {
 
         // be sure to activate shader when setting uniforms/drawing objects
         lightingShader.use();
-        lightingShader.setVec3("light.position", light.position);
+        lightingShader.setInt("light.type", (int)light.GetType());
+
+        lightingShader.setVec4("light.position", light.position);
         lightingShader.setVec3("viewPos", this->_camera.Position);
 
         // light properties
@@ -222,7 +240,7 @@ int ExecutionerLight::run() {
 
         // world transformation
         glm::mat4 model = glm::mat4(1.0f);
-        lightingShader.setMat4("model", model);
+        // lightingShader.setMat4("model", model);
 
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
@@ -231,8 +249,19 @@ int ExecutionerLight::run() {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specularMap);
         // render the cube
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(cubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        for(unsigned int i = 0; i < 10; i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            lightingShader.setMat4("model", model);
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         // also draw the lamp object
         lightCubeShader.use();
@@ -241,13 +270,16 @@ int ExecutionerLight::run() {
         model = glm::mat4(1.0f);
         
         // rotate light
-        float angle = glfwGetTime() * 25.0f;
-        model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-        lightCubeShader.setMat4("model", model);
-        light.position = glm::vec3(model[3]); // update light position 
+        // float angle = glfwGetTime() * 25.0f;
+        // model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+        // model = glm::translate(model, lightPos);
+        // model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        lightCubeShader.setMat4("model", glm::mat4(1.0f));
+        // light.position = glm::vec3(model[3]); // update light position 
+        // lightingShader.setVec4("light.position", light.position); 	
         
+
+
         glBindVertexArray(lightCubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
