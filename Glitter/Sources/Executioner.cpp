@@ -620,7 +620,7 @@ int Executioner::_run4() {
     // -------------------------------------------------------------------------------------------
     ourShader.use(); // don't forget to activate/use the shader before setting uniforms!
     // either set it manually like so:
-    glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
+    glUniform1i(glGetUniformLocation(ourShader.Program, "texture1"), 0);
     // or set it via the texture class
     ourShader.setInt("texture2", 1);
 
