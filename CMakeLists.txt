@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.13)
 project(Glitter)
 
 option(GLFW_BUILD_DOCS OFF)
@@ -27,48 +27,8 @@ else()
     endif()
 endif()
 
-include_directories(Glitter/Headers/
-                    Glitter/Vendor/assimp/include/
-                    Glitter/Vendor/bullet/src/
-                    Glitter/Vendor/glad/include/
-                    Glitter/Vendor/glfw/include/
-                    Glitter/Vendor/glm/
-                    Glitter/Vendor/stb/)
+set(GLITTER_DIR ${CMAKE_SOURCE_DIR}/Glitter)
 
-file(GLOB VENDORS_SOURCES Glitter/Vendor/glad/src/glad.c)
-file(GLOB PROJECT_HEADERS Glitter/Headers/*.hpp
-                          Glitter/Headers/*.h)
-file(GLOB PROJECT_SOURCES Glitter/Sources/*.cpp)
-file(GLOB PROJECT_SHADERS Glitter/Shaders/*.comp
-                          Glitter/Shaders/*.frag
-                          Glitter/Shaders/*.geom
-                          Glitter/Shaders/*.vert
-                          Glitter/Shaders/*.vs
-                          Glitter/Shaders/*.fs)
-file(GLOB PROJECT_CONFIGS CMakeLists.txt
-                          Readme.md
-                         .gitattributes
-                         .gitignore
-                         .gitmodules)
 
-source_group("Headers" FILES ${PROJECT_HEADERS})
-source_group("Shaders" FILES ${PROJECT_SHADERS})
-source_group("Sources" FILES ${PROJECT_SOURCES})
-source_group("Vendors" FILES ${VENDORS_SOURCES})
-
-set(PROJECT_SOURCE_DIR ${PROJECT_SOURCE_DIR}/Glitter)
-add_definitions(-DGLFW_INCLUDE_NONE
-                -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\")
-add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS}
-                               ${PROJECT_SHADERS} ${PROJECT_CONFIGS}
-                               ${VENDORS_SOURCES})
-target_link_libraries(${PROJECT_NAME} assimp glfw
-                      ${GLFW_LIBRARIES} ${GLAD_LIBRARIES}
-                      BulletDynamics BulletCollision LinearMath)
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
-
-add_custom_command(
-    TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Glitter/Shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>
-    DEPENDS ${PROJECT_SHADERS})
+# Add projects folder
+add_subdirectory(Projects)
